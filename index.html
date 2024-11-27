@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa con Coordenadas - OpenLayers</title>
+    <!-- Cargar la librería de OpenLayers -->
+    <link rel="stylesheet" href="https://unpkg.com/ol@latest/dist/ol.css" type="text/css">
+    <script src="https://unpkg.com/ol@latest/dist/ol.js"></script>
+    <style>
+        /* Estilo general de la página */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom right, #96f2c79a, #224e42c7); /* Fondo con gradiente */
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Contenedor principal */
+        .container {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            width: 80%; /* Ajustar tamaño según sea necesario */
+            max-width: 1200px;
+            gap: 20px; /* Espacio entre formulario y mapa */
+        }
+
+        /* Estilo del formulario */
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Estilo de los campos de texto */
+        input[type="text"] {
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #ffb6b6; /* Bordes suaves */
+            border-radius: 8px;
+            font-size: 1em;
+            width: 200px;
+        }
+
+        /* Botón */
+        button {
+            padding: 10px 20px;
+            background-color: #ff7f7f; /* Color del botón */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #ff4c4c; /* Efecto de hover */
+        }
+
+        /* Estilo del contenedor del mapa */
+        #map {
+            width: 70%;
+            height: 400px;
+            border-radius: 12px;
+            border: 2px solid #ffb6b6; /* Bordes suaves alrededor del mapa */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Formulario con coordenadas -->
+        <form id="coordinatesForm">
+            <label for="lat">Latitud:</label>
+            <input type="text" id="lat" name="lat" value="40.730610">
+            <label for="lon">Longitud:</label>
+            <input type="text" id="lon" name="lon" value="-73.935242">
+            <button type="submit">Actualizar Mapa</button>
+        </form>
+
+        <!-- Contenedor del mapa -->
+        <div id="map"></div>
+    </div>
+
+    <script>
+        // Inicializar el mapa
+        let map, marker;
+
+        // Crear el mapa con coordenadas iniciales
+        function initMap() {
+            const initialLat = parseFloat(document.getElementById('lat').value);
+            const initialLon = parseFloat(document.getElementById('lon').value);
+
+            // Crear la vista del mapa
+            const view = new ol.View({
+                center: ol.proj.fromLonLat([initialLon, initialLat]),
+                zoom: 15
+            });
+
+            // Crear el mapa con OpenLayers
+            map = new ol.Map({
+                target: 'map', // ID del contenedor del mapa
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM() // Usamos OpenStreetMap como capa base
+                    })
+                ],
+                view: view
+            });
+
+            // Crear un marcador en las coordenadas iniciales
+            marker = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([initialLon, initialLat]))
+            });
+
+            // Crear un estilo para el marcador
+            const style = new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 10,
+                    fill: new ol.style.Fill({ color: 'red' }),
+                    stroke: new ol.style.Stroke({ color: 'white', width: 2 })
+                })
+            });
+
+            // Asignar el estilo al marcador
+            marker.setStyle(style);
+
+            // Crear un vector para los marcadores
+            const vectorSource = new ol.source.Vector({
+                features: [marker]
+            });
+
+            // Crear una capa vectorial para el marcador
+            const vectorLayer = new ol.layer.Vector({
+                source: vectorSource
+            });
+
+            // Agregar la capa del marcador al mapa
+            map.addLayer(vectorLayer);
+        }
+
+        // Actualizar el mapa cuando el formulario se envíe
+        document.getElementById('coordinatesForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevenir el comportamiento por defecto del formulario
+
+            const lat = parseFloat(document.getElementById('lat').value);
+            const lon = parseFloat(document.getElementById('lon').value);
+
+            // Actualizar el centro del mapa con las nuevas coordenadas
+            const view = map.getView();
+            view.setCenter(ol.proj.fromLonLat([lon, lat]));
+
+            // Mover el marcador a las nuevas coordenadas
+            marker.setGeometry(new ol.geom.Point(ol.proj.fromLonLat([lon, lat])));
+        });
+
+        // Inicializar el mapa al cargar la página
+        window.onload = initMap;
+    </script>
+</body>
+</html>
